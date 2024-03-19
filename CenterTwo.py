@@ -282,7 +282,7 @@ class Controller():
             print(INCORRECT_VALUE_ERROR)
             return -1
         if self.readAcknowledgement() == ACK:
-            s, v = self.enquiry().split(", ")
+            s, v = self.enquiry().split(",")
             s = int(s)
             value = float(v)
             status = self.checkSensorStatus(s)
@@ -334,13 +334,12 @@ class Controller():
         command = b"PRX"
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            s_v = [[], [], []]
             status = [[], [], []]
             value = [[], [], []]
-            s_v[0], s_v[1], s_v[2] = self.enquiry().split(",")
-            for i, x in enumerate(s_v):
-                status[i] = self.checkSensorStatus(int(x[0]))
-                value[i] = float(x[1])
+            status[0], value[0], status[1], value[1], status[2], value[2] = self.enquiry().split(",")
+            for i, s, v in enumerate(zip(status, value)):
+                status[i] = self.checkSensorStatus(int(s))
+                value[i] = float(v)
             return [status, value]
         else:
             print(ACK_ERROR)

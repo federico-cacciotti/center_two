@@ -126,6 +126,7 @@ class Controller():
     # COM
     def setContinuousMode(self, period=1):
         """
+        TO DO
         Continuous mode. Continuous transmission of measurements to the serial interface.
 
         Parameters:
@@ -291,8 +292,59 @@ class Controller():
             return -1
 
     # PRE
+    def setPiraniRangeExtention(self, re1=0, re2=0, re3=0):
+        """
+        Pirani range extension.
+
+        Parameters:
+        re1 (int): range extension for transmitter 1, 0 for Off (default), 1 for On.
+        re2 (int): same for above.
+        re3 (int): same for above.
+        """
+        if (re1 == 0 or re1 == 1) and (re2 == 0 or re2 == 1) and (re3 == 0 or re3 == 1):
+            command = ("PRE,{:d},{:d},{:d}".format(re1, re2, re3)).encode()
+            self.sendCommand(command)
+        else:
+            print(INCORRECT_VALUE_ERROR)
+            return -1
+        if self.readAcknowledgement() == ACK:
+            r_re1, r_2, r_re3 = self.enquiry().split(",")
+            r_re1 = int(r_re1)
+            r_re2 = int(r_re2)
+            r_re3 = int(r_re3)
+
+            if r_re1 == re1 and r_re2 == re2 and r_re3 == re3:
+                print("Pirani range extension successfully set")
+                return [re1, re2, re3]
+            else:
+                print(UNKNOWN_ERROR)
+                return -1
+        else:
+            print(ACK_ERROR)
+            return -1
 
     # PRX
+    def getPressure(self):
+        """
+        Pressure reading of all transmitters.
+
+        Parameters:
+        None
+        """
+        command = b"PRX"
+        self.sendCommand(command)
+        if self.readAcknowledgement() == ACK:
+            s_v = [[], [], []]
+            status = [[], [], []]
+            value = [[], [], []]
+            s_v[0], s_v[1], s_v[2] = self.enquiry().split(",")
+            for i, x in enumerate(s_v):
+                status[i] = self.checkSensorStatus(int(x[0]))
+                value[i] = float(x[1])
+            return [status, value]
+        else:
+            print(ACK_ERROR)
+            return -1
 
     # RES
 
@@ -323,7 +375,7 @@ class Controller():
         command = b"TID"
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            return self.enquiry().split(", ")
+            return self.enquiry().split(",")
         else:
             print(ACK_ERROR)
             return -1

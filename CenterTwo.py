@@ -337,7 +337,7 @@ class Controller():
             status = [[], [], []]
             value = [[], [], []]
             status[0], value[0], status[1], value[1], status[2], value[2] = self.enquiry().split(",")
-            for i, s, v in enumerate(zip(status, value)):
+            for i, (s, v) in enumerate(zip(status, value)):
                 status[i] = self.checkSensorStatus(int(s))
                 value[i] = float(v)
             return [status, value]

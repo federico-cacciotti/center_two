@@ -86,27 +86,6 @@ class Controller():
         else:
             return -1
 
-    def checkQueuedErrors(self, code):
-        def checkSensorStatus(self, status):
-        if code == 0:
-            return SENS_OK
-        elif code == 1:
-            return SENS_UR
-        elif code == 2:
-            return SENS_OR
-        elif code == 3:
-            return TRANS_ERR
-        elif code == 4:
-            return TRANS_OFF
-        elif code == 5:
-             return NO_TRANS
-        elif code == 6:
-            return ID_ERR
-        elif code == 7:
-            return ITR_ERR
-        else:
-            return -1
-
     # AOM
     def setAnalogOutput(self, channel, curve):
         """

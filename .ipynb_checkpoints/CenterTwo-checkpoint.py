@@ -28,6 +28,23 @@ INV_PAR = "Invalid parameter"
 STX_ERR = "Syntax error"
 NO_ERR = "No error"
 
+# queued error
+QUEUED_ERROR = ["No error",
+                "Watchdog has triggered",
+                "Task(s) not executed",
+                "EPROM error",
+                "RAM error",
+                "EEPROM error",
+                "Display error",
+                "A/D converter error",
+                "UART error",
+                "Transmitter 1 general error",
+                "Transmitter 1 ID error",
+                "Transmitter 2 general error",
+                "Transmitter 2 ID error",
+                "Transmitter 3 general error",
+                "Transmitter 3 ID error"]
+
 class Controller():
 
     def __init__(self, serial_port, baudrate=9600, pariy=serial.PARITY_NONE, stopbits=2):
@@ -65,6 +82,27 @@ class Controller():
         elif status == 6:
             return ID_ERR
         elif status == 7:
+            return ITR_ERR
+        else:
+            return -1
+
+    def checkQueuedErrors(self, code):
+        def checkSensorStatus(self, status):
+        if code == 0:
+            return SENS_OK
+        elif code == 1:
+            return SENS_UR
+        elif code == 2:
+            return SENS_OR
+        elif code == 3:
+            return TRANS_ERR
+        elif code == 4:
+            return TRANS_OFF
+        elif code == 5:
+             return NO_TRANS
+        elif code == 6:
+            return ID_ERR
+        elif code == 7:
             return ITR_ERR
         else:
             return -1
@@ -346,6 +384,26 @@ class Controller():
             return -1
 
     # RES
+    def resetSerial(self, rst=0):
+        """
+        Reset the serial interface and deletes the input buffer. All queued errors messages are sent to the host.
+
+        Parameters:
+        rst (int): if 1 performs a reset.
+        """
+        if rst == 1:
+            command = ("RES,{:d}".format(rst)).encode()
+            self.sendCommand(command)
+        else:
+            print("To perform a reset the rst parameter must be 1")
+            return -1
+        if self.readAcknowledgement() == ACK:
+            quequed_errors = self.enquiry().split(",")
+            quequed_errors = [int(x) for x in quequed_errors]
+            return [QUEUED_ERROR[x] for x in quequed_errors]
+        else:
+            print(ACK_ERROR)
+            return -1
 
     # SAV
 

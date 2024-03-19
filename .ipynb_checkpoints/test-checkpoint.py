@@ -14,7 +14,7 @@ fig = plt.figure()
 ax = fig.gca()
 
 while(True):
-    status, pressure = sensor.getChannelPressure(channel)
+    status, pressure = sensor.getPressure(channel)
     if status == 0:
         pressure_array = np.roll(pressure_array, -1)
         pressure_array[-1] = pressure

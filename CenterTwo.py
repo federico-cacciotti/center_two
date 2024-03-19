@@ -34,6 +34,7 @@ class Controller():
     
     def enquiry(self):
         self.serial_com.write(ENQ)
+        return self.serial_com.readline().rstrip().decode()
     
     def readLine(self):
         return self.serial_com.readline()
@@ -77,8 +78,7 @@ class Controller():
             
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            self.enquiry()
-            returned_mode = int(self.readLine().rstrip().decode())
+            returned_mode = self.enquiry()
             if returned_mode == mode:
                 print("Baudrate succesfully set")
                 return returned_mode
@@ -99,8 +99,7 @@ class Controller():
         command = ("COM,{:d}".format(period)).encode()
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            self.enquiry()
-            s, v = self.readLine().rstrip().decode().split(", ")
+            s, v = self.enquiry().split(", ")
         else:
             print(ACK_ERROR)
 
@@ -109,9 +108,8 @@ class Controller():
         command = b"ERR"
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            self.enquiry()
             errors = []
-            status = self.readLine().rstrip().decode()
+            status = self.enquiry()
             if status[0] == '1':
                 errors.append("Device error")
             if status[1] == '1':
@@ -132,29 +130,25 @@ class Controller():
         command = b"PNR"
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            self.enquiry()
-            return self.readLine().rstrip().decode()
+            return self.enquiry()
 
     # TID
     def getTransmitterId(self):
         command = b"TID"
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            self.enquiry()
-            return self.readLine().rstrip().decode().split(", ")
+            return self.enquiry().split(", ")
     
     # PR#
-    def getPressure(self, channel):
+    def getChannelPressure(self, channel):
         command = ("PR{:d}".format(channel)).encode()
         self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
-            self.enquiry()
-            s, v = self.readLine().rstrip().decode().split(", ")
+            s, v = self.enquiry().split(", ")
             s = int(s)
             v = float(v)
             status = self.checkSensorStatus(s)
             return [status, value]
-                
         else:
             print("Error while reading sensor")
             return -1

@@ -12,14 +12,14 @@ UNKNOWN_ERROR = "Unknown error"
 INCORRECT_VALUE_ERROR = "Incorrect value"
 
 # sensor status strings
-SENS_OK = "Measurement data ok"
-SENS_UR = "Measurement under range"
-SENS_OV = "Measurement over range"
-TRANS_ERR = "Transmitter error"
-TRANS_OFF = "Transmitter switched off"
-NO_TRANS = "No transmitter"
-ID_ERR = "Identification error"
-ITR_ER = "ITR error"
+SENS_STATUS = ["Measurement data ok",
+               "Measurement under range",
+               "Measurement over range",
+               "Transmitter error",
+               "Transmitter switched off",
+               "No transmitter",
+               "Identification error",
+               "ITR error"]
 
 # error status strings
 DEV_ERR = "Device error"
@@ -28,7 +28,7 @@ INV_PAR = "Invalid parameter"
 STX_ERR = "Syntax error"
 NO_ERR = "No error"
 
-# queued error
+# queued error strings
 QUEUED_ERROR = ["No error",
                 "Watchdog has triggered",
                 "Task(s) not executed",
@@ -65,26 +65,6 @@ class Controller():
     
     def readAcknowledgement(self):
         return self.serial_com.readline().rstrip()
-
-    def checkSensorStatus(self, status):
-        if status == 0:
-            return SENS_OK
-        elif status == 1:
-            return SENS_UR
-        elif status == 2:
-            return SENS_OR
-        elif status == 3:
-            return TRANS_ERR
-        elif status == 4:
-            return TRANS_OFF
-        elif status == 5:
-             return NO_TRANS
-        elif status == 6:
-            return ID_ERR
-        elif status == 7:
-            return ITR_ERR
-        else:
-            return -1
 
     # AOM
     def setAnalogOutput(self, channel, curve):
@@ -199,11 +179,11 @@ class Controller():
         """
         if digits == 2 or digits == 3:
             command = ("DCD,{:d}".format(digits)).encode()
+            self.sendCommand(command)
         else:
             print(INCORRECT_VALUE_ERROR)
             return -1
             
-        self.sendCommand(command)
         if self.readAcknowledgement() == ACK:
             r_digits = int(self.enquiry())
             if r_digits == digits:
@@ -302,7 +282,7 @@ class Controller():
             s, v = self.enquiry().split(",")
             s = int(s)
             value = float(v)
-            status = self.checkSensorStatus(s)
+            status = SENS_STATUS[s]
             return [status, value]
         else:
             print(ACK_ERROR)
@@ -355,7 +335,7 @@ class Controller():
             value = [[], [], []]
             status[0], value[0], status[1], value[1], status[2], value[2] = self.enquiry().split(",")
             for i, (s, v) in enumerate(zip(status, value)):
-                status[i] = self.checkSensorStatus(int(s))
+                status[i] = SENS_STATUS[int(s)]
                 value[i] = float(v)
             return [status, value]
         else:

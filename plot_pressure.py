@@ -29,8 +29,10 @@ while(True):
     if status == CenterTwo.SENS_STATUS[0] or status == CenterTwo.SENS_STATUS[1] or status == CenterTwo.SENS_STATUS[2]:
         pressure_array = np.roll(pressure_array, -1)
         pressure_array[-1] = pressure
+        time_array = np.roll(time_array, -1)
+        time_array[-1] = time()
         with open(path_to_logs+logfile_name, 'a') as file:
-            np.savetxt(file, X=[time, pressure], delimiter=',', comments='#')
+            np.savetxt(file, X=[time_array[-1], pressure_array[-1]], delimiter=',', comments='#')
     if status == CenterTwo.SENS_STATUS[1] or status == CenterTwo.SENS_STATUS[2]:
         print(status)
 

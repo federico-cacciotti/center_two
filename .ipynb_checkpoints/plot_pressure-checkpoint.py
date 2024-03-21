@@ -22,6 +22,8 @@ np.savetxt(path_to_logs+logfile_name, delimiter=',', comments='#', X=[])
 fig = plt.figure()
 ax = fig.gca()
 
+start_time = time()/3600.0
+
 while(True):
     # get pressure
     status, pressure = sensor.getChannelPressure(channel)
@@ -30,15 +32,17 @@ while(True):
         pressure_array = np.roll(pressure_array, -1)
         pressure_array[-1] = pressure
         time_array = np.roll(time_array, -1)
-        time_array[-1] = time()
+        time_array[-1] = time()/3600.0 - start_time
+        
         with open(path_to_logs+logfile_name, 'a') as file:
             np.savetxt(file, X=[time_array[-1], pressure_array[-1]], delimiter=',', comments='#')
+            
     if status == CenterTwo.SENS_STATUS[1] or status == CenterTwo.SENS_STATUS[2]:
         print(status)
 
     ax.clear()
     ax.set_ylabel("Pressure [mbar]")
-    ax.set_xlabel("Index")
+    ax.set_xlabel("Time since acquisition started [h]")
     ax.plot(time_array, pressure_array)
 
     plt.pause(PERIOD)

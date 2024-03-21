@@ -29,7 +29,7 @@ while(True):
     if status == 0:
         pressure_array = np.roll(pressure_array, -1)
         pressure_array[-1] = pressure
-        with open(path_to_logs+logfile_name) as file:
+        with open(path_to_logs+logfile_name, 'a') as file:
             np.savetxt(file, X=[time, pressure], delimiter=',', comments='#')
 
     ax.clear()

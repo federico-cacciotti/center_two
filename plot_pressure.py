@@ -26,11 +26,13 @@ while(True):
     # get pressure
     status, pressure = sensor.getChannelPressure(channel)
     
-    if status == CenterTwo.SENS_STATUS[0]:
+    if status == CenterTwo.SENS_STATUS[0] or status == CenterTwo.SENS_STATUS[1] or status == CenterTwo.SENS_STATUS[2]:
         pressure_array = np.roll(pressure_array, -1)
         pressure_array[-1] = pressure
         with open(path_to_logs+logfile_name, 'a') as file:
             np.savetxt(file, X=[time, pressure], delimiter=',', comments='#')
+    if status == CenterTwo.SENS_STATUS[1] or status == CenterTwo.SENS_STATUS[2]:
+        print(status)
 
     ax.clear()
     ax.set_ylabel("Pressure [mbar]")

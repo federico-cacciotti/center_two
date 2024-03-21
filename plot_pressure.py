@@ -1,4 +1,4 @@
-from leybold_vacuum_controller import CenterTwo
+import CenterTwo
 from matplotlib import pyplot as plt
 import numpy as np
 from datetime import datetime

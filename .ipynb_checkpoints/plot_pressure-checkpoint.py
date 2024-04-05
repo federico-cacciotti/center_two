@@ -4,8 +4,9 @@ import numpy as np
 from datetime import datetime
 from time import time
 
-serial_port = "/dev/ttyS3"
-sensor = CenterTwo.Controller(serial_port)
+serial_port = "/dev/ttyUSB0"
+sensor = CenterTwo.Controller()
+sensor.connect(serial_port)
 
 PERIOD = 2.0 # seconds
 channel = 1
@@ -13,7 +14,7 @@ LENGTH = 400
 pressure_array = np.ones(LENGTH)*np.nan
 time_array = np.ones(LENGTH)*np.nan
 
-path_to_logs = "/src/leybold_vacuum_controller/logs/"
+path_to_logs = "/home/federico/Documents/GitHub/leybold_vacuum_controller/logs/"
 logfile_name = datetime.now().strftime("%Y%d%m_%H%M%S")+".dat"
 header = "time since epoch,pressure"
 
@@ -26,7 +27,7 @@ start_time = time()/3600.0
 
 while(True):
     # get pressure
-    status, pressure = sensor.getChannelPressure(channel)
+    status, pressure = sensor.get_channel_pressure(channel)
     
     if status == CenterTwo.SENS_STATUS[0] or status == CenterTwo.SENS_STATUS[1] or status == CenterTwo.SENS_STATUS[2]:
         pressure_array = np.roll(pressure_array, -1)

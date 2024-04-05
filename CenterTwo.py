@@ -47,27 +47,41 @@ QUEUED_ERROR = ["No error",
 
 class Controller():
 
-    def __init__(self, serial_port, baudrate=9600, pariy=serial.PARITY_NONE, stopbits=2):
-        self.serial_com = serial.Serial(port=serial_port, baudrate=baudrate, timeout=1, parity=serial.PARITY_NONE, stopbits=2)
+    def __init__(self):
+        self.is_connected = False
+        self.serial_port = None
+        self.baudrate = None
 
-    def closeCommunication(self):
+    def connect(self, serial_port: str, baudrate, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_TWO):
+        self.serial_port = serial_port
+        self.baudrate = baudrate
+        try:
+            self.serial_com = serial.Serial(port=serial_port, baudrate=baudrate, timeout=1, parity=parity, stopbits=stopbits)
+            self.is_connected = True
+        except serial.SerialException:
+            print("Could not open serial port")
+            self.is_connected = False
+            pass
+
+    def close(self):
         self.serial_com.close()
+        self.is_connected = False
     
-    def sendCommand(self, command):
+    def send_command(self, command):
         return self.serial_com.write(command+CR+LF)
     
     def enquiry(self):
         self.serial_com.write(ENQ)
         return self.serial_com.readline().rstrip().decode()
     
-    def readLine(self):
+    def read_line(self):
         return self.serial_com.readline()
     
-    def readAcknowledgement(self):
+    def read_acknowledgement(self):
         return self.serial_com.readline().rstrip()
 
     # AOM
-    def setAnalogOutput(self, channel, curve):
+    def set_analog_output(self, channel, curve):
         """
         Set analog output mode. Characteristic curve of the recorder output.
 
@@ -78,7 +92,7 @@ class Controller():
                      23 for IM221, 24 for LoGC4, 25 for PM411.
         """
         command = ("AOM,{:d},{:d}".format(channel, curve)).encode()
-        if self.readAcknowledgement() == ACK:
+        if self.read_acknowledgement() == ACK:
             r_channel, r_curve = self.enquiry().split(",")
             r_channel = int(r_channel)
             r_curve = int(r_curve)
@@ -94,7 +108,7 @@ class Controller():
             
 
     # BAU
-    def setBaudrate(self, mode=0):
+    def set_baudrate(self, mode=0):
         """
         Baudrate. Transfer rate of the RS232C interface.
 
@@ -107,8 +121,8 @@ class Controller():
             print(INCORRECT_VALUE_ERROR)
             return -1
             
-        self.sendCommand(command)
-        if self.readAcknowledgement() == ACK:
+        self.send_command(command)
+        if self.read_acknowledgement() == ACK:
             r_mode = int(self.enquiry())
             if r_mode == mode:
                 print("Baudrate succesfully set")
@@ -121,7 +135,7 @@ class Controller():
             return -1
             
     # COM
-    def setContinuousMode(self, period=1):
+    def set_continuous_mode(self, period=1):
         """
         TO DO
         Continuous mode. Continuous transmission of measurements to the serial interface.
@@ -130,8 +144,8 @@ class Controller():
         period (int): 0 for 100 milliseconds, 1 for 1 second (default), 2 for 1 minute.
         """
         command = ("COM,{:d}".format(period)).encode()
-        self.sendCommand(command)
-        if self.readAcknowledgement() == ACK:
+        self.send_command(command)
+        if self.read_acknowledgement() == ACK:
             s, v = self.enquiry().split(", ")
             # TO DO
         else:
@@ -139,7 +153,7 @@ class Controller():
             return -1
 
     # CORR
-    def setCorrectionFactor(self, cr1=1.0, cr2=1.0, cr3=1.0):
+    def set_correction_factor(self, cr1=1.0, cr2=1.0, cr3=1.0):
         """
         Correction factors.
 
@@ -158,8 +172,8 @@ class Controller():
             print(INCORRECT_VALUE_ERROR)
             return -1
         command = ("COR,{:.2f},{:.2f},{:.2f}".format(cr1, cr2, cr3)).encode()
-        self.sendCommand(command)
-        if self.readAcknowledgement() == ACK:
+        self.send_command(command)
+        if self.read_acknowledgement() == ACK:
             r_cr1, r_cr2, r_cr3 = self.enquiry().split(",")
             r_cr1 = float(r_cr1)
             r_cr2 = float(r_cr2)
@@ -170,7 +184,7 @@ class Controller():
             return -1
 
     # DCD
-    def setNumberOfDigits(self, digits=2):
+    def set_number_of_digits(self, digits=2):
         """
         Number of digits shown on the display
 
@@ -179,12 +193,12 @@ class Controller():
         """
         if digits == 2 or digits == 3:
             command = ("DCD,{:d}".format(digits)).encode()
-            self.sendCommand(command)
+            self.send_command(command)
         else:
             print(INCORRECT_VALUE_ERROR)
             return -1
             
-        if self.readAcknowledgement() == ACK:
+        if self.read_acknowledgement() == ACK:
             r_digits = int(self.enquiry())
             if r_digits == digits:
                 print("Display digits succesfully set")
@@ -201,7 +215,7 @@ class Controller():
     # ERA
 
     # ERR
-    def getErrorStatus(self):
+    def get_error_status(self):
         """
         Error status.
 
@@ -209,8 +223,8 @@ class Controller():
         None
         """
         command = b"ERR"
-        self.sendCommand(command)
-        if self.readAcknowledgement() == ACK:
+        self.send_command(command)
+        if self.read_acknowledgement() == ACK:
             errors = []
             status = self.enquiry()
             if status[0] == '1':
@@ -249,7 +263,7 @@ class Controller():
     # OFD
 
     # PNR
-    def getProgramNumber(self):
+    def get_program_number(self):
         """
         Firmware version number.
 
@@ -257,15 +271,15 @@ class Controller():
         None
         """
         command = b"PNR"
-        self.sendCommand(command)
-        if self.readAcknowledgement() == ACK:
+        self.send_command(command)
+        if self.read_acknowledgement() == ACK:
             return self.enquiry()
         else:
             print(ACK_ERROR)
             return -1
 
     # PR#
-    def getChannelPressure(self, channel):
+    def get_channel_pressure(self, channel):
         """
         Pressure reading of sensor #.
 
@@ -274,11 +288,11 @@ class Controller():
         """
         if channel == 1 or channel == 2 or channel == 3:
             command = ("PR{:d}".format(channel)).encode()
-            self.sendCommand(command)
+            self.send_command(command)
         else:
             print(INCORRECT_VALUE_ERROR)
             return -1
-        if self.readAcknowledgement() == ACK:
+        if self.read_acknowledgement() == ACK:
             s, v = self.enquiry().split(",")
             s = int(s)
             value = float(v)
@@ -289,7 +303,7 @@ class Controller():
             return -1
 
     # PRE
-    def setPiraniRangeExtention(self, re1=0, re2=0, re3=0):
+    def set_pirani_pange_extention(self, re1=0, re2=0, re3=0):
         """
         Pirani range extension.
 
@@ -300,11 +314,11 @@ class Controller():
         """
         if (re1 == 0 or re1 == 1) and (re2 == 0 or re2 == 1) and (re3 == 0 or re3 == 1):
             command = ("PRE,{:d},{:d},{:d}".format(re1, re2, re3)).encode()
-            self.sendCommand(command)
+            self.send_command(command)
         else:
             print(INCORRECT_VALUE_ERROR)
             return -1
-        if self.readAcknowledgement() == ACK:
+        if self.read_acknowledgement() == ACK:
             r_re1, r_2, r_re3 = self.enquiry().split(",")
             r_re1 = int(r_re1)
             r_re2 = int(r_re2)
@@ -321,7 +335,7 @@ class Controller():
             return -1
 
     # PRX
-    def getPressure(self):
+    def get_pressure(self):
         """
         Pressure reading of all transmitters.
 
@@ -329,8 +343,8 @@ class Controller():
         None
         """
         command = b"PRX"
-        self.sendCommand(command)
-        if self.readAcknowledgement() == ACK:
+        self.send_command(command)
+        if self.read_acknowledgement() == ACK:
             status = [[], [], []]
             value = [[], [], []]
             status[0], value[0], status[1], value[1], status[2], value[2] = self.enquiry().split(",")
@@ -343,7 +357,7 @@ class Controller():
             return -1
 
     # RES
-    def resetSerial(self, rst=0):
+    def reset_serial(self, rst=0):
         """
         Reset the serial interface and deletes the input buffer. All queued errors messages are sent to the host.
 
@@ -352,11 +366,11 @@ class Controller():
         """
         if rst == 1:
             command = ("RES,{:d}".format(rst)).encode()
-            self.sendCommand(command)
+            self.send_command(command)
         else:
             print("To perform a reset the rst parameter must be 1")
             return -1
-        if self.readAcknowledgement() == ACK:
+        if self.read_acknowledgement() == ACK:
             quequed_errors = self.enquiry().split(",")
             quequed_errors = [int(x) for x in quequed_errors]
             return [QUEUED_ERROR[x] for x in quequed_errors]
@@ -381,7 +395,7 @@ class Controller():
     # TEP
     
     # TID
-    def getTransmitterId(self):
+    def get_transmitter_id(self):
         """
         Transmitter identification.
 
@@ -389,8 +403,8 @@ class Controller():
         None
         """
         command = b"TID"
-        self.sendCommand(command)
-        if self.readAcknowledgement() == ACK:
+        self.send_command(command)
+        if self.read_acknowledgement() == ACK:
             return self.enquiry().split(",")
         else:
             print(ACK_ERROR)

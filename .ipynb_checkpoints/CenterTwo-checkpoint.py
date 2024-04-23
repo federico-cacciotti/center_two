@@ -52,7 +52,7 @@ class Controller():
         self.serial_port = None
         self.baudrate = None
 
-    def connect(self, serial_port: str, baudrate, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_TWO):
+    def connect(self, serial_port, baudrate, parity=serial.PARITY_NONE, stopbits=serial.STOPBITS_TWO):
         self.serial_port = serial_port
         self.baudrate = baudrate
         try:
